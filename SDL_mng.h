@@ -44,6 +44,7 @@ typedef struct
    MHDR_chunk    mhdr;
    unsigned int  frame_count;
    SDL_Surface **frame;
+	  unsigned int  *frame_delay;
 }
 MNG_Image;
 
@@ -52,9 +53,24 @@ int IMG_isMNG(SDL_RWops *src);
 
 /* Read and return an MNG image */
 MNG_Image *IMG_LoadMNG(const char *file);
-MNG_Image *IMG_LoadMNGRW(SDL_RWops *src);
+MNG_Image *IMG_LoadMNG_RW(SDL_RWops *src);
 
 int IMG_FreeMNG(MNG_Image *img);
+
+typedef struct
+{
+	MNG_Image *animation;
+	int frame;
+	unsigned long ticks;
+	SDL_Rect dst;
+}
+MNG_AnimationState;
+
+void IMG_SetAnimationState(MNG_AnimationState *state, int frame, int ticks);
+
+unsigned long IMG_TimeToNextFrame(MNG_AnimationState *state, int ticks);
+
+SDL_Surface *IMG_TimeUpdate(MNG_AnimationState *state, int ticks);
 
 #ifdef __cplusplus
 }

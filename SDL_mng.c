@@ -65,6 +65,7 @@ MNG_Image *MNG_iterate_chunks(SDL_RWops *src);
 
 typedef struct MNG_Frame
 {
+   unsigned int delay;
    SDL_Surface      *frame;
    struct MNG_Frame *next;
 }
@@ -78,10 +79,15 @@ int IMG_isMNG(SDL_RWops *src)
 {
    unsigned char buf[8];
 
-   if(SDL_RWread(src, buf, 1, 8) != 8)
-      return -1;
+   int start = SDL_RWtell(src);
+   if ( SDL_RWread(src, buf, 1, 8) != 8 )
+   {
+       SDL_RWseek(src, start, RW_SEEK_SET);
+       return -1;
+   }
 
-   return(!memcmp(buf, "\212MNG\r\n\032\n", 8));
+   SDL_RWseek(src, start, RW_SEEK_SET);
+   return( !memcmp(buf, "\212MNG\r\n\032\n", 8) );
 }
 
 MNG_Image *IMG_LoadMNG(const char *file)
@@ -89,30 +95,10 @@ MNG_Image *IMG_LoadMNG(const char *file)
    SDL_RWops *src = NULL;
 
    src = SDL_RWFromFile(file, "rb");
-
-   if(src == NULL)
-      return NULL;
-
-   /* See whether or not this data source can handle seeking */
-   if(SDL_RWseek(src, 0, SEEK_CUR) < 0)
-   {
-      SDL_SetError("Can't seek in this data source");
-      SDL_RWclose(src);
-      return NULL;
-   }
-
-   /* Verify MNG signature */
-   if(!IMG_isMNG(src))
-   {
-      SDL_SetError("File is not an MNG file");
-      SDL_RWclose(src);
-      return NULL;
-   }
-
-   return(MNG_iterate_chunks(src));
+   return IMG_LoadMNG_RW(src);
 }
 
-MNG_Image *IMG_LoadMNGRW(SDL_RWops *src)
+MNG_Image *IMG_LoadMNG_RW(SDL_RWops *src)
 {
     if (src == NULL)
         return NULL;
@@ -132,6 +118,10 @@ MNG_Image *IMG_LoadMNGRW(SDL_RWops *src)
             SDL_RWclose(src);
             return NULL;
     }
+   SDL_RWseek(src, 8, RW_SEEK_CUR);
+   MNG_Image *result = MNG_iterate_chunks(src);
+   SDL_RWclose(src);
+   return result;
 }
 
 /* Read a byte from the src stream */
@@ -198,6 +188,22 @@ MHDR_chunk read_MHDR(SDL_RWops *src)
    return mng_header;
 }
 
+/* Read FRAM chunk data */
+unsigned int read_FRAM(chunk_t *c)
+{
+    unsigned int value;
+    value  = ((unsigned char)c->chunk_data[6]) << 24; value |= ((unsigned char)c->chunk_data[7]) << 16;
+    value |= ((unsigned char)c->chunk_data[8]) << 8;  value |= ((unsigned char)c->chunk_data[9]);
+    return value;
+/*    MNG_read_byte(src); // Framing mode
+    MNG_read_byte(src); // Seperator
+    MNG_read_byte(src); // Change interframe delay
+    MNG_read_byte(src); // Change timeout and termination
+    MNG_read_byte(src); // Change layer clipping boundaries
+    MNG_read_byte(src); // Change sync id list
+    return MNG_read_uint32(src); // Interframe delay*/
+}
+
 /* Iterate through the MNG chunks */
 MNG_Image *MNG_iterate_chunks(SDL_RWops *src)
 {
@@ -205,6 +211,7 @@ MNG_Image *MNG_iterate_chunks(SDL_RWops *src)
 
    unsigned int byte_count = 0;
    unsigned int frame_count = 0;
+   unsigned int frame_delay = 0;
    unsigned int i;
 
    MNG_Frame *start_frame = NULL;
@@ -222,6 +229,7 @@ MNG_Image *MNG_iterate_chunks(SDL_RWops *src)
          case MNG_UINT_MHDR:
             SDL_RWseek(src, -(current_chunk.chunk_size + 4), SEEK_CUR);
             image->mhdr = read_MHDR(src);
+            frame_delay = 1000 / image->mhdr.Ticks_per_second;
             break;
 
          /* Reset our byte count */
@@ -246,9 +254,12 @@ MNG_Image *MNG_iterate_chunks(SDL_RWops *src)
             }
 
             current_frame->frame = MNG_read_frame(src);
+            current_frame->delay = frame_delay;
             frame_count++;
             break;
-
+         case MNG_UINT_FRAM:
+            frame_delay = read_FRAM(&current_chunk) * 1000 / image->mhdr.Ticks_per_second;
+            break;
          default:
             break;
       }
@@ -258,14 +269,18 @@ MNG_Image *MNG_iterate_chunks(SDL_RWops *src)
 
    /* Now that we're done, move the frames into our image struct */
    image->frame_count = frame_count;
+   image->frame_delay = (unsigned int *)calloc(sizeof(unsigned int), frame_count);
    image->frame = (SDL_Surface **)calloc(sizeof(SDL_Surface *), frame_count);
 
    current_frame = start_frame;
 
    for(i = 0; i < frame_count; i++)
    {
+      image->frame_delay[i] = current_frame->delay;
       image->frame[i] = current_frame->frame;
       current_frame = current_frame->next;
+      free(start_frame);
+      start_frame = current_frame;
    }
    return image;
 }
@@ -289,6 +304,7 @@ int IMG_FreeMNG(MNG_Image *img)
    for(i = 0; i < img->frame_count; i++)
       SDL_FreeSurface(img->frame[i]);
 
+   free(img->frame_delay);
    free(img->frame);
    free(img);
 
@@ -398,6 +414,34 @@ SDL_Surface *MNG_read_frame(SDL_RWops *src)
    png_read_end(png_ptr, info_ptr);
 
    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+   if ( row_pointers )
+   {
+      free(row_pointers);
+   }
 
    return(surface); 
+}
+
+void IMG_SetAnimationState(MNG_AnimationState *state, int frame, int ticks)
+{
+   state->frame = frame;
+   state->ticks = ticks;
+}
+
+unsigned long IMG_TimeToNextFrame(MNG_AnimationState *state, int ticks)
+{
+   return state->animation->frame_delay[state->frame] - (ticks - state->ticks);
+}
+
+SDL_Surface *IMG_TimeUpdate(MNG_AnimationState *state, int ticks)
+{
+   if ((state->frame == -1) || (state->animation->frame_delay[state->frame] <= (ticks - state->ticks)))
+   {
+      state->frame++;
+      state->frame = state->frame % state->animation->frame_count;
+      state->ticks = ticks;
+      return state->animation->frame[state->frame];
+   }
+   else
+      return NULL;
 }
