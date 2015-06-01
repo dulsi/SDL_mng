@@ -1,10 +1,10 @@
 Summary: Simple DirectMedia Layer - MNG Loading Library
 Name: SDL_mng
 Version: 0.2.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: LGPLv2+
 Group: System Environment/Libraries
-Source0: http://www.identicalsoftware.com/btbuilder/%{name}-%{version}.tar.gz
+Source0: http://www.identicalsoftware.com/btbuilder/%{name}-%{version}.tgz
 BuildRequires: SDL-devel
 BuildRequires: libpng-devel
 BuildRequires: SDL_image-devel
@@ -45,7 +45,8 @@ make %{?_smp_mflags}
 %{_libdir}/lib*.so
 
 %changelog
+* Sun May 31 2015 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.2-2
+- Fixed source file to tgz not tar.gz
+
 * Sun May 31 2015 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.2-1
 - Initial spec
-
-
