@@ -1,7 +1,7 @@
 Summary: Simple DirectMedia Layer - MNG Loading Library
 Name: SDL_mng
 Version: 0.2.2
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: LGPLv2+
 Group: System Environment/Libraries
 Source0: http://www.identicalsoftware.com/btbuilder/%{name}-%{version}.tgz
@@ -29,8 +29,8 @@ This is a simple library to load mng animations as SDL surfaces.
 make %{?_smp_mflags}
 
 %install
-%makeinstall
-#make prefix=%{buildroot} install
+%make_install
+find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 
 %files
 %defattr(-,root,root)
@@ -38,13 +38,15 @@ make %{?_smp_mflags}
 %{_libdir}/lib*.so.*
 
 %files devel
-%defattr(-,root,root)
 %{_includedir}/SDL/
 %{_libdir}/lib*.a
-%{_libdir}/lib*.la
 %{_libdir}/lib*.so
 
 %changelog
+* Wed Jun 3 2015 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.2-3
+- Do not package .la files
+- Use %make_install instead of %makeinstall
+
 * Sun May 31 2015 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.2-2
 - Fixed source file to tgz not tar.gz
 
