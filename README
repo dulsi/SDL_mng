@@ -1,14 +1,7 @@
 SDL_mng: Copyright (C) 2011 Thomas Kircher
  
-To build - autogen, configure, and make. To install, make install.
+To build - configure and make. To install, make install.
 
 To make an MNG animation file, you can use ImageMagick:
 
  $ convert -delay <inter-frame delay> <frame_*.png> anim.mng
-
-0.2.3
-Update FSF address in files.
-
-0.2.2
-Unofficial enhancements by Dennis Payne. Adds MNG_Animation object to
-track animation state. Also includes some memory fixes.

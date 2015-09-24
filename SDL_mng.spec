@@ -1,9 +1,8 @@
 Summary: Simple DirectMedia Layer - MNG Loading Library
 Name: SDL_mng
-Version: 0.2.3
+Version: 0.2.4
 Release: 1%{?dist}
 License: LGPLv2+
-Group: System Environment/Libraries
 URL: https://github.com/dulsi/SDL_mng
 Source0: http://www.identicalsoftware.com/btbuilder/%{name}-%{version}.tgz
 BuildRequires: SDL-devel
@@ -15,12 +14,13 @@ This is a simple library to load mng animations as SDL surfaces.
 
 %package devel
 Summary: Libraries and includes for SDL MNG development.
-Group: Development/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
-Requires: SDL-devel
+Requires: SDL-devel%{isa}
+Requires: pkgconfig
 
 %description devel
-This is a simple library to load mng animations as SDL surfaces.
+This package contains libraries and header files for
+developing applications that use %{name}.
 
 %prep
 %setup -q
@@ -34,20 +34,27 @@ make %{?_smp_mflags}
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 find $RPM_BUILD_ROOT -name 'lib*.a' -exec rm -f {} ';'
 
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+
 %files
-%doc README
+%doc README ChangeLog
 %license LICENSE
 %{_libdir}/lib*.so.*
 
 %files devel
 %{_includedir}/SDL/*
 %{_libdir}/lib*.so
-
-%post -p /sbin/ldconfig
-
-%postun -p /sbin/ldconfig
+%{_libdir}/pkgconfig/%{name}.pc
 
 %changelog
+* Wed Sep 23 2015 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.4-1
+- Added pckconfig file
+- Removed Group tags
+- Changed description of devel package
+- Reordered post and postun section
+
 * Sat Aug 15 2015 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.3-1
 - Do not package static libraries
 - Made the requirement for the devel package specific to the version.

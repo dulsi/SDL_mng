@@ -7,6 +7,9 @@ libSDL_mnginclude_HEADERS =	\
 libSDL_mng_la_SOURCES =	\
 	SDL_mng.c
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = SDL_mng.pc
+
 noinst_PROGRAMS = mngtest
 
 mngtest_SOURCES = mngtest.c

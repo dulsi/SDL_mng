@@ -1,13 +1,13 @@
-AC_INIT(LICENSE)
+AC_INIT(SDL_mng, 0.2.4)
 
-VERSION=0.1
+VERSION=0.2.4
 
 dnl Detect the canonical host and target build environment
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
 dnl Setup for automake
-AM_INIT_AUTOMAKE(SDL_mng, $VERSION)
+AM_INIT_AUTOMAKE(foreign)
 AM_MAINTAINER_MODE
 
 dnl Check for tools
@@ -43,4 +43,7 @@ fi
 CFLAGS="$CFLAGS $SDL_CFLAGS"
 LIBS="$LIBS $SDL_LIBS"
 
-AC_OUTPUT([Makefile])
+AC_OUTPUT([
+Makefile
+SDL_mng.pc
+])
