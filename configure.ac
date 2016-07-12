@@ -17,7 +17,7 @@ AC_PROG_CC
 AC_PROG_INSTALL
 
 dnl Check for libSDL
-SDL_VERSION=1.2.4
+SDL_VERSION=2.0.0
 AM_PATH_SDL($SDL_VERSION,
             :,
 	    AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])

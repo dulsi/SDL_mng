@@ -20,7 +20,7 @@
 #ifndef __SDL_mng_h__
 #define __SDL_mng_h__
 
-#include <SDL/SDL.h>
+#include <SDL.h>
 
 #ifdef __cplusplus
 extern "C" {

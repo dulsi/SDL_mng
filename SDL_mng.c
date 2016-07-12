@@ -20,8 +20,9 @@
 */
 
 #include <stdio.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_endian.h>
+#include <SDL.h>
+#include <SDL_surface.h>
+#include <SDL_endian.h>
 #include "SDL_mng.h"
 
 #include <png.h>
@@ -225,7 +226,7 @@ MNG_Image *MNG_iterate_chunks(SDL_RWops *src)
       {
          /* Read MHDR chunk, and store in image struct */
          case MNG_UINT_MHDR:
-            SDL_RWseek(src, -(current_chunk.chunk_size + 4), SEEK_CUR);
+            SDL_RWseek(src, SDL_RWtell(src) - (current_chunk.chunk_size + 4), SEEK_SET);
             image->mhdr = read_MHDR(src);
             frame_delay = 1000 / image->mhdr.Ticks_per_second;
             break;
@@ -237,7 +238,7 @@ MNG_Image *MNG_iterate_chunks(SDL_RWops *src)
 
          /* We've reached the end of a PNG - seek to IHDR and read */
          case MNG_UINT_IEND:
-            SDL_RWseek(src, -byte_count, SEEK_CUR);
+            SDL_RWseek(src, SDL_RWtell(src)-byte_count, SEEK_SET);
 
             /* We don't know how many frames there will be, really. */
             if(start_frame == NULL)
@@ -382,7 +383,7 @@ SDL_Surface *MNG_read_frame(SDL_RWops *src)
       Amask = 0x000000FF;
    }
 
-   surface = SDL_AllocSurface(SDL_SWSURFACE, width, height,
+   surface = SDL_CreateRGBSurface(0, width, height,
                 32, Rmask, Gmask, Bmask, Amask);
 
    if(surface == NULL)

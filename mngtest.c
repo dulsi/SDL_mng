@@ -1,35 +1,57 @@
 #include <SDL.h>
 #include "SDL_mng.h"
 
-SDL_Surface *init_SDL(void)
+SDL_Renderer *init_SDL(void)
 {
-   SDL_Surface *display;
+   SDL_Renderer *display;
    int video_flags;
 
-   if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
+   if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_TIMER) < 0)
    {
       fprintf(stderr, "Couldn't initialize SDL: %s\n", SDL_GetError());
       exit(1);
    }
 
-   if(SDL_GetVideoInfo()->hw_available)
-      video_flags = SDL_HWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF;
-   else
-      video_flags = SDL_SWSURFACE;
+   SDL_Window *sdlWindow = SDL_CreateWindow("MNG Test",
+                             SDL_WINDOWPOS_UNDEFINED,
+                             SDL_WINDOWPOS_UNDEFINED,
+                             400, 300,
+                             0);
+   if(sdlWindow == NULL)
+      exit(1);
 
-   SDL_WM_SetCaption("MNG Test", "MNG Test");
-
-   if((display = SDL_SetVideoMode(400, 300, 0, video_flags)) == NULL)
+   display = SDL_CreateRenderer(sdlWindow, -1, 0);
+   if(display == NULL)
       exit(1);
 
    return display;
 }
 
-int display_loop(SDL_Surface *display, MNG_Image *image)
+Uint32 timerCallback(Uint32 interval, void *param)
+{
+ SDL_Event event;
+ SDL_UserEvent userevent;
+
+ userevent.type = SDL_USEREVENT;
+ userevent.code = 0;
+ userevent.data1 = NULL;
+ userevent.data2 = NULL;
+
+ event.type = SDL_USEREVENT;
+ event.user = userevent;
+
+ SDL_PushEvent(&event);
+ return 0;
+}
+
+int display_loop(SDL_Renderer *display, MNG_Image *image)
 {
    SDL_Event event;
+   SDL_Texture *sdlTexture;
    SDL_Surface *background;
-   SDL_Rect src_rect, dst_rect;
+   SDL_Surface *displayFake;
+   SDL_Rect src_rect;
+   SDL_TimerID timer;
 
    unsigned long old_time, new_time, delay;
    unsigned long elapsed_t = 0, frame = 0;
@@ -43,8 +65,20 @@ int display_loop(SDL_Surface *display, MNG_Image *image)
    printf("frames: %i, fps: %i", image->frame_count, image->mhdr.Ticks_per_second);
 #endif
 
-   background = SDL_CreateRGBSurface(SDL_SWSURFACE, display->w, display->h,
-                   32, 0, 0, 0, 0);
+   sdlTexture = SDL_CreateTexture(display,
+                               SDL_PIXELFORMAT_ARGB8888,
+                               SDL_TEXTUREACCESS_STREAMING,
+                               400, 300);
+   displayFake = SDL_CreateRGBSurface(0, 400, 300, 32,
+                                        0x00FF0000,
+                                        0x0000FF00,
+                                        0x000000FF,
+                                        0xFF000000);
+   background = SDL_CreateRGBSurface(0, 400, 300, 32,
+                                        0x00FF0000,
+                                        0x0000FF00,
+                                        0x000000FF,
+                                        0xFF000000);
 
    SDL_FillRect(background, NULL, SDL_MapRGB(background->format, 128, 128, 128));
 
@@ -53,32 +87,34 @@ int display_loop(SDL_Surface *display, MNG_Image *image)
    src_rect.x = 0;
    src_rect.y = 0;
 
-   dst_rect.w = image->frame[0]->w;
-   dst_rect.h = image->frame[0]->h;
-   dst_rect.x = (display->w - src_rect.w) / 2;
-   dst_rect.y = (display->h - src_rect.h) / 2;
+   MNG_AnimationState animation;
+   animation.animation = image;
 
-   new_time = SDL_GetTicks();
+   animation.dst.w = image->frame[0]->w;
+   animation.dst.h = image->frame[0]->h;
+   animation.dst.x = (400 - src_rect.w) / 2;
+   animation.dst.y = (300 - src_rect.h) / 2;
+   IMG_SetAnimationState(&animation, -1, 0);
+   old_time = SDL_GetTicks();
 
    while(1)
    {
-      old_time = new_time;
-      new_time = SDL_GetTicks();
-
-      elapsed_t += new_time - old_time;
-
-      if(elapsed_t >= delay)
+      unsigned long ticks = SDL_GetTicks();
+      SDL_Surface *nextImg = IMG_TimeUpdate(&animation, ticks);
+      if (nextImg)
       {
-         elapsed_t -= delay;
-         if(++frame >= image->frame_count)
-            frame = 0;
+         SDL_BlitSurface(background, NULL, displayFake, NULL);
+         SDL_BlitSurface(nextImg, NULL, displayFake, &animation.dst);
+         SDL_UpdateTexture(sdlTexture, NULL, displayFake->pixels, 400 * sizeof (Uint32));
+         SDL_RenderClear(display);
+         SDL_RenderCopy(display, sdlTexture, NULL, NULL);
+         SDL_RenderPresent(display);
       }
+      unsigned long animationDelay = IMG_TimeToNextFrame(&animation, ticks);
+      timer = SDL_AddTimer(animationDelay, timerCallback, NULL);
 
-      SDL_BlitSurface(background, NULL, display, NULL);
-      SDL_BlitSurface(image->frame[frame], NULL, display, &dst_rect);
-      SDL_Flip(display);
-
-      while(SDL_PollEvent(&event))
+      SDL_WaitEvent(&event);
+      SDL_RemoveTimer(timer);
       {
          switch(event.type)
          {
@@ -92,7 +128,7 @@ int display_loop(SDL_Surface *display, MNG_Image *image)
 
 int main(int argc, char **argv)
 {
-   SDL_Surface *display;
+   SDL_Renderer *display;
    MNG_Image *image;
 
    if(argc > 1)
