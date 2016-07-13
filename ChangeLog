@@ -1,3 +1,7 @@
+0.2.5
+Upgrade to SDL2.
+Modified mngtest to use a timer for waiting instead of polling.
+
 0.2.4
 Added a pkgconfig file.
 
