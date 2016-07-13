@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libSDL_mng.la
 
-libSDL_mngincludedir = $(includedir)/SDL
+libSDL_mngincludedir = $(includedir)/SDL2
 libSDL_mnginclude_HEADERS =	\
 	SDL_mng.h
 
