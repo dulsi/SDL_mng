@@ -21,7 +21,9 @@
 
 #include <stdio.h>
 #include <SDL.h>
+#ifndef SDLLIB
 #include <SDL_surface.h>
+#endif
 #include <SDL_endian.h>
 #include "SDL_mng.h"
 
