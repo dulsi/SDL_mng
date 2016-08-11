@@ -230,7 +230,8 @@ MNG_Image *MNG_iterate_chunks(SDL_RWops *src)
          case MNG_UINT_MHDR:
             SDL_RWseek(src, SDL_RWtell(src) - (current_chunk.chunk_size + 4), SEEK_SET);
             image->mhdr = read_MHDR(src);
-            frame_delay = 1000 / image->mhdr.Ticks_per_second;
+            if (image->mhdr.Ticks_per_second)
+               frame_delay = 1000 / image->mhdr.Ticks_per_second;
             break;
 
          /* Reset our byte count */
@@ -405,13 +406,48 @@ SDL_Surface *MNG_read_frame(SDL_RWops *src)
       return NULL;
    }
 
-   for(row = 0; row < height; row++)
-      row_pointers[row] = NULL;
+   if (color_type == 2)
+   {
+      png_bytep colordata = malloc(width * height * 3);
+      for (row = 0; row < height; row++)
+         row_pointers[row] = NULL;
 
-   for(row = 0; row < (int)height; row++)
-      row_pointers[row] = (png_bytep)(Uint8 *)surface->pixels + row*surface->pitch;
+      for (row = 0; row < (int)height; row++)
+      {
+         row_pointers[row] = (png_bytep)colordata + row * (width * 3);
+      }
 
-   png_read_image(png_ptr, row_pointers);
+      png_read_image(png_ptr, row_pointers);
+      for (row = 0; row < (int)height; row++)
+      {
+         Uint8 *row_pixels = surface->pixels + row*surface->pitch;
+         for (int x = 0; x < width; x++)
+         {
+            row_pixels[4 * x] = row_pointers[row][3 * x];
+            row_pixels[4 * x + 1] = row_pointers[row][3 * x + 1];
+            row_pixels[4 * x + 2] = row_pointers[row][3 * x + 2];
+            row_pixels[4 * x + 3] = 255;
+         }
+      }
+      free(colordata);
+   }
+   else if (color_type == 6)
+   {
+      for(row = 0; row < height; row++)
+         row_pointers[row] = NULL;
+
+      for(row = 0; row < (int)height; row++)
+         row_pointers[row] = (png_bytep)(Uint8 *)surface->pixels + row*surface->pitch;
+
+      png_read_image(png_ptr, row_pointers);
+   }
+   else
+   {
+      SDL_SetError("Not supported color type");
+      SDL_FreeSurface(surface);
+      png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+      return NULL;
+   }
    png_read_end(png_ptr, info_ptr);
 
    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);

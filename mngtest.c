@@ -62,7 +62,7 @@ int display_loop(SDL_Renderer *display, MNG_Image *image)
       delay = 100;
 
 #ifdef DEBUG
-   printf("frames: %i, fps: %i", image->frame_count, image->mhdr.Ticks_per_second);
+   printf("frames: %i, fps: %i\n", image->frame_count, image->mhdr.Ticks_per_second);
 #endif
 
    sdlTexture = SDL_CreateTexture(display,
