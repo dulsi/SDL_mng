@@ -1,3 +1,6 @@
+0.2.6
+Added support for frames without alpha channel.
+
 0.2.5
 Upgrade to SDL2.
 Modified mngtest to use a timer for waiting instead of polling.

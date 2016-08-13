@@ -1,6 +1,6 @@
 Summary: Simple DirectMedia Layer - MNG Loading Library
 Name: SDL_mng
-Version: 0.2.5
+Version: 0.2.6
 Release: 1%{?dist}
 License: LGPLv2+
 URL: https://github.com/dulsi/SDL_mng
@@ -49,7 +49,10 @@ find $RPM_BUILD_ROOT -name 'lib*.a' -exec rm -f {} ';'
 %{_libdir}/pkgconfig/%{name}.pc
 
 %changelog
-* Tue Jul 12 2016 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.4-2
+* Sat Aug 13 2016 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.6-1
+- Updated to new version
+
+* Tue Jul 12 2016 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.5-1
 - Updated to new version
 
 * Wed Oct 28 2015 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.4-2
