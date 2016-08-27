@@ -1,7 +1,7 @@
 Summary: Simple DirectMedia Layer - MNG Loading Library
 Name: SDL_mng
 Version: 0.2.6
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: LGPLv2+
 URL: https://github.com/dulsi/SDL_mng
 Source0: http://www.identicalsoftware.com/btbuilder/%{name}-%{version}.tgz
@@ -13,7 +13,7 @@ BuildRequires: SDL2_image-devel
 This is a simple library to load mng animations as SDL surfaces.
 
 %package devel
-Summary: Libraries and includes for SDL MNG development.
+Summary: Libraries and includes for SDL MNG development
 Requires: %{name}%{?_isa} = %{version}-%{release}
 Requires: SDL2-devel%{?_isa}
 Requires: pkgconfig
@@ -27,6 +27,7 @@ developing applications that use %{name}.
 
 %build
 %configure
+sed -i -e 's! -shared ! -Wl,--as-needed\0!g' libtool
 make %{?_smp_mflags}
 
 %install
@@ -49,6 +50,9 @@ find $RPM_BUILD_ROOT -name 'lib*.a' -exec rm -f {} ';'
 %{_libdir}/pkgconfig/%{name}.pc
 
 %changelog
+* Fri Aug 26 2016 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.6-2
+- Fix unused direct shlib dependency
+
 * Sat Aug 13 2016 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.6-1
 - Updated to new version
 
