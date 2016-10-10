@@ -1,0 +1,37 @@
+cmake_minimum_required (VERSION 2.8.11)
+project (SDL_mng)
+
+set(SDL_MNG_VERSION_MAJOR 0)
+set(SDL_MNG_VERSION_MINOR 2)
+set(SDL_MNG_VERSION_PATCH 7)
+set(SDL_MNG_VERSION_STRING ${SDL_MNG_VERSION_MAJOR}.${SDL_MNG_VERSION_MINOR}.${SDL_MNG_VERSION_PATCH})
+
+add_library (SDL_mng SHARED SDL_mng.c)
+set_target_properties(SDL_mng PROPERTIES VERSION ${SDL_MNG_VERSION_STRING} SOVERSION ${SDL_MNG_VERSION_MAJOR})
+
+target_include_directories (SDL_mng PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+add_executable (mngtest mngtest.c)
+target_link_libraries (mngtest LINK_PUBLIC SDL_mng)
+
+INCLUDE(FindPkgConfig)
+
+PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
+PKG_SEARCH_MODULE(PNG REQUIRED libpng)
+
+INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${SDL2_LIBRARIES} ${PNG_LIBRARIES})
+
+
+set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}" CACHE PATH "Installation directory for libraries")
+set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Installation directory for headers")
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/SDL_mng.pc.cmakein
+		${CMAKE_CURRENT_BINARY_DIR}/SDL_mng.pc @ONLY)
+
+install(TARGETS ${PROJECT_NAME} DESTINATION "lib${LIB_SUFFIX}")
+
+# Install library headers
+file(GLOB HEADERS *.h)
+install(FILES ${HEADERS} DESTINATION include/SDL2)
+
+install(FILES SDL_mng.pc DESTINATION "lib${LIB_SUFFIX}/pkgconfig")

@@ -1,7 +1,7 @@
 Summary: Simple DirectMedia Layer - MNG Loading Library
 Name: SDL_mng
-Version: 0.2.6
-Release: 2%{?dist}
+Version: 0.2.7
+Release: 1%{?dist}
 License: LGPLv2+
 URL: https://github.com/dulsi/SDL_mng
 Source0: http://www.identicalsoftware.com/btbuilder/%{name}-%{version}.tgz
@@ -26,14 +26,12 @@ developing applications that use %{name}.
 %setup -q
 
 %build
-%configure
-sed -i -e 's! -shared ! -Wl,--as-needed\0!g' libtool
+export CXXFLAGS="%{optflags} -Wl,--as-needed"
+%cmake
 make %{?_smp_mflags}
 
 %install
 %make_install
-find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
-find $RPM_BUILD_ROOT -name 'lib*.a' -exec rm -f {} ';'
 
 %post -p /sbin/ldconfig
 
@@ -50,6 +48,9 @@ find $RPM_BUILD_ROOT -name 'lib*.a' -exec rm -f {} ';'
 %{_libdir}/pkgconfig/%{name}.pc
 
 %changelog
+* Sun Oct 09 2016 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.7-1
+- Convert to cmake
+
 * Fri Aug 26 2016 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.6-2
 - Fix unused direct shlib dependency
 
