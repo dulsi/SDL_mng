@@ -1,10 +1,12 @@
 Summary: Simple DirectMedia Layer - MNG Loading Library
 Name: SDL_mng
 Version: 0.2.7
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: LGPLv2+
 URL: https://github.com/dulsi/SDL_mng
 Source0: http://www.identicalsoftware.com/btbuilder/%{name}-%{version}.tgz
+BuildRequires: gcc
+BuildRequires: gcc-c++
 BuildRequires: SDL2-devel
 BuildRequires: libpng-devel
 BuildRequires: SDL2_image-devel
@@ -49,6 +51,9 @@ make %{?_smp_mflags}
 %{_libdir}/pkgconfig/%{name}.pc
 
 %changelog
+* Sun Feb 18 2018 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.7-3
+- Add build requirement of gcc-c++.
+
 * Sun Oct 09 2016 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.7-2
 - Add requires cmake to build
 
