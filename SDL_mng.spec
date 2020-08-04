@@ -1,7 +1,7 @@
 Summary: Simple DirectMedia Layer - MNG Loading Library
 Name: SDL_mng
-Version: 0.2.7
-Release: 3%{?dist}
+Version: 0.2.8
+Release: 1%{?dist}
 License: LGPLv2+
 URL: https://github.com/dulsi/SDL_mng
 Source0: http://www.identicalsoftware.com/btbuilder/%{name}-%{version}.tgz
@@ -31,14 +31,12 @@ developing applications that use %{name}.
 %build
 export CXXFLAGS="%{optflags} -Wl,--as-needed"
 %cmake
-make %{?_smp_mflags}
+%cmake_build
 
 %install
-%make_install
+%cmake_install
 
-%post -p /sbin/ldconfig
-
-%postun -p /sbin/ldconfig
+%ldconfig_scriptlets
 
 %files
 %doc README ChangeLog
@@ -51,8 +49,48 @@ make %{?_smp_mflags}
 %{_libdir}/pkgconfig/%{name}.pc
 
 %changelog
-* Sun Feb 18 2018 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.7-3
-- Add build requirement of gcc-c++.
+* Tue Aug 04 2020 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.8-1
+- Switch to cmake_build and cmake_install macros
+
+* Mon Aug 03 2020 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.7-15
+- Switch to cmake_build and cmake_install macros
+
+* Sat Aug 01 2020 Fedora Release Engineering <releng@fedoraproject.org> - 0.2.7-14
+- Second attempt - Rebuilt for
+  https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
+
+* Mon Jul 27 2020 Fedora Release Engineering <releng@fedoraproject.org> - 0.2.7-13
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
+
+* Tue Jan 28 2020 Fedora Release Engineering <releng@fedoraproject.org> - 0.2.7-12
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
+
+* Wed Jul 24 2019 Fedora Release Engineering <releng@fedoraproject.org> - 0.2.7-11
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
+
+* Thu Jan 31 2019 Fedora Release Engineering <releng@fedoraproject.org> - 0.2.7-10
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
+
+* Wed Jan 23 2019 Björn Esser <besser82@fedoraproject.org> - 0.2.7-9
+- Append curdir to CMake invokation. (#1668512)
+
+* Thu Jul 12 2018 Fedora Release Engineering <releng@fedoraproject.org> - 0.2.7-8
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
+
+* Wed Mar 07 2018 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.7-7
+- Add build requires g++ to build
+
+* Wed Feb 07 2018 Fedora Release Engineering <releng@fedoraproject.org> - 0.2.7-6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
+
+* Wed Aug 02 2017 Fedora Release Engineering <releng@fedoraproject.org> - 0.2.7-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
+
+* Wed Jul 26 2017 Fedora Release Engineering <releng@fedoraproject.org> - 0.2.7-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
+
+* Fri Feb 10 2017 Fedora Release Engineering <releng@fedoraproject.org> - 0.2.7-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
 
 * Sun Oct 09 2016 Dennis Payne <dulsi@identicalsoftware.com> - 0.2.7-2
 - Add requires cmake to build
